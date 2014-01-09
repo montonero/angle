@@ -71,6 +71,9 @@ void SwapChain9::release()
 
 static DWORD convertInterval(EGLint interval)
 {
+#if ANGLE_FORCE_VSYNC_OFF
+    return D3DPRESENT_INTERVAL_IMMEDIATE;
+#else
     switch(interval)
     {
       case 0: return D3DPRESENT_INTERVAL_IMMEDIATE;
@@ -82,6 +85,7 @@ static DWORD convertInterval(EGLint interval)
     }
 
     return D3DPRESENT_INTERVAL_DEFAULT;
+#endif
 }
 
 EGLint SwapChain9::resize(int backbufferWidth, int backbufferHeight)
@@ -308,6 +312,11 @@ EGLint SwapChain9::swapRect(EGLint x, EGLint y, EGLint width, EGLint height)
     device->SetSamplerState(0, D3DSAMP_ADDRESSV, D3DTADDRESS_CLAMP);
     device->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
 
+    for (UINT streamIndex = 0; streamIndex < gl::MAX_VERTEX_ATTRIBS; streamIndex++)
+    {
+        device->SetStreamSourceFreq(streamIndex, 1);
+    }
+
     D3DVIEWPORT9 viewport = {0, 0, mWidth, mHeight, 0.0f, 1.0f};
     device->SetViewport(&viewport);
 
@@ -342,17 +351,19 @@ EGLint SwapChain9::swapRect(EGLint x, EGLint y, EGLint width, EGLint height)
 
     mRenderer->markAllStateDirty();
 
-    if (d3d9::isDeviceLostError(result))
-    {
-        return EGL_CONTEXT_LOST;
-    }
-
     if (result == D3DERR_OUTOFVIDEOMEMORY || result == E_OUTOFMEMORY || result == D3DERR_DRIVERINTERNALERROR)
     {
         return EGL_BAD_ALLOC;
     }
 
-    ASSERT(SUCCEEDED(result));
+    // http://crbug.com/313210
+    // If our swap failed, trigger a device lost event. Resetting will work around an AMD-specific
+    // device removed bug with lost contexts when reinstalling drivers.
+    if (FAILED(result))
+    {
+        mRenderer->notifyDeviceLost();
+        return EGL_CONTEXT_LOST;
+    }
 
     return EGL_SUCCESS;
 }

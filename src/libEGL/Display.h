@@ -18,10 +18,6 @@
 
 #include "libEGL/Config.h"
 
-
-
-
-
 namespace gl
 {
 class Context;

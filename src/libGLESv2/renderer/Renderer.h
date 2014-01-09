@@ -101,6 +101,12 @@ enum ShaderType
     SHADER_GEOMETRY
 };
 
+enum D3DWorkaroundType
+{
+    ANGLE_D3D_WORKAROUND_NONE,
+    ANGLE_D3D_WORKAROUND_SM3_OPTIMIZER
+};
+
 class Renderer
 {
   public:
@@ -241,6 +247,7 @@ class Renderer
   protected:
     bool initializeCompiler();
     ShaderBlob *compileToBinary(gl::InfoLog &infoLog, const char *hlsl, const char *profile, UINT optimizationFlags, bool alternateFlags);
+
     egl::Display *mDisplay;
 
   private:

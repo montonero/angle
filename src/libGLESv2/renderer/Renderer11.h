@@ -198,9 +198,6 @@ class Renderer11 : public Renderer
     virtual bool getLUID(LUID *adapterLuid) const;
 
   private:
-
-
-
     DISALLOW_COPY_AND_ASSIGN(Renderer11);
 
 	EGLint createDevice();
@@ -254,7 +251,7 @@ class Renderer11 : public Renderer
         unsigned int qualityLevels[D3D11_MAX_MULTISAMPLE_SAMPLE_COUNT];
     };
 
-    typedef std::unordered_map<DXGI_FORMAT, MultisampleSupportInfo> MultisampleSupportMap;
+    typedef std::unordered_map<DXGI_FORMAT, MultisampleSupportInfo, std::hash<int> > MultisampleSupportMap;
     MultisampleSupportMap mMultisampleSupportMap;
 
     unsigned int mMaxSupportedSamples;

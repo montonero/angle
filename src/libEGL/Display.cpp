@@ -538,6 +538,4 @@ const char *Display::getVendorString() const
     return mVendorString.c_str();
 }
 
-
-
 }

@@ -19,6 +19,39 @@ extern __declspec( thread ) DWORD currentTLS;
 static DWORD currentTLS = TLS_OUT_OF_INDEXES;
 #endif // #if defined(ANGLE_PLATFORM_WINRT) 
 
+namespace gl
+{
+
+Current *AllocateCurrent()
+{
+    Current *current = (Current*)LocalAlloc(LPTR, sizeof(Current));
+
+    if (!current)
+    {
+        ERR("Could not allocate thread local storage.");
+        return NULL;
+    }
+
+    ASSERT(currentTLS != TLS_OUT_OF_INDEXES);
+    TlsSetValue(currentTLS, current);
+
+    current->context = NULL;
+    current->display = NULL;
+
+    return current;
+}
+
+void DeallocateCurrent()
+{
+    void *current = TlsGetValue(currentTLS);
+
+    if (current)
+    {
+        LocalFree((HLOCAL)current);
+    }
+}
+
+}
 
 extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 {
@@ -36,36 +69,17 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved
         // Fall throught to initialize index
       case DLL_THREAD_ATTACH:
         {
-            gl::Current *current = (gl::Current*)LocalAlloc(LPTR, sizeof(gl::Current));
-
-            if (current)
-            {
-                TlsSetValue(currentTLS, current);
-
-                current->context = NULL;
-                current->display = NULL;
-            }
+            gl::AllocateCurrent();
         }
         break;
       case DLL_THREAD_DETACH:
         {
-            void *current = TlsGetValue(currentTLS);
-
-            if (current)
-            {
-                LocalFree((HLOCAL)current);
-            }
+            gl::DeallocateCurrent();
         }
         break;
       case DLL_PROCESS_DETACH:
         {
-            void *current = TlsGetValue(currentTLS);
-
-            if (current)
-            {
-                LocalFree((HLOCAL)current);
-            }
-
+            gl::DeallocateCurrent();
             TlsFree(currentTLS);
         }
         break;
@@ -78,9 +92,19 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved
 
 namespace gl
 {
-void makeCurrent(Context *context, egl::Display *display, egl::Surface *surface)
+
+Current *GetCurrentData()
 {
     Current *current = (Current*)TlsGetValue(currentTLS);
+
+    // ANGLE issue 488: when the dll is loaded after thread initialization,
+    // thread local storage (current) might not exist yet.
+    return (current ? current : AllocateCurrent());
+}
+
+void makeCurrent(Context *context, egl::Display *display, egl::Surface *surface)
+{
+    Current *current = GetCurrentData();
 
     current->context = context;
     current->display = display;
@@ -93,7 +117,7 @@ void makeCurrent(Context *context, egl::Display *display, egl::Surface *surface)
 
 Context *getContext()
 {
-    Current *current = (Current*)TlsGetValue(currentTLS);
+    Current *current = GetCurrentData();
 
     return current->context;
 }
@@ -119,7 +143,7 @@ Context *getNonLostContext()
 
 egl::Display *getDisplay()
 {
-    Current *current = (Current*)TlsGetValue(currentTLS);
+    Current *current = GetCurrentData();
 
     return current->display;
 }

@@ -12,7 +12,7 @@
 #include "libGLESv2/Buffer.h"
 #include "libGLESv2/ProgramBinary.h"
 #include "libGLESv2/Framebuffer.h"
-#include "libGLESv2/RenderBuffer.h"
+#include "libGLESv2/Renderbuffer.h"
 #include "libGLESv2/renderer/Renderer11.h"
 #include "libGLESv2/renderer/RenderTarget11.h"
 #include "libGLESv2/renderer/renderer11_utils.h"
@@ -354,8 +354,6 @@ EGLint Renderer11::initialize()
     {
         D3D11_MESSAGE_ID hideMessages[] =
         {
-            D3D11_MESSAGE_ID_DEVICE_OMSETRENDERTARGETS_HAZARD,
-            D3D11_MESSAGE_ID_DEVICE_PSSETSHADERRESOURCES_HAZARD,
             D3D11_MESSAGE_ID_DEVICE_DRAW_RENDERTARGETVIEW_NOT_SET
         };
 
@@ -1031,6 +1029,25 @@ bool Renderer11::applyRenderTarget(gl::Framebuffer *framebuffer)
                 renderTargetFormat = colorbuffer->getActualFormat();
                 missingColorRenderTarget = false;
             }
+
+#ifdef _DEBUG
+            // Workaround for Debug SETSHADERRESOURCES_HAZARD D3D11 warnings
+            for (unsigned int vertexSerialIndex = 0; vertexSerialIndex < gl::IMPLEMENTATION_MAX_VERTEX_TEXTURE_IMAGE_UNITS; vertexSerialIndex++)
+            {
+                if (colorbuffer->getTextureSerial() != 0 && mCurVertexTextureSerials[vertexSerialIndex] == colorbuffer->getTextureSerial())
+                {
+                    setTexture(gl::SAMPLER_VERTEX, vertexSerialIndex, NULL);
+                }
+            }
+
+            for (unsigned int pixelSerialIndex = 0; pixelSerialIndex < gl::MAX_TEXTURE_IMAGE_UNITS; pixelSerialIndex++)
+            {
+                if (colorbuffer->getTextureSerial() != 0 && mCurPixelTextureSerials[pixelSerialIndex] == colorbuffer->getTextureSerial())
+                {
+                    setTexture(gl::SAMPLER_PIXEL, pixelSerialIndex, NULL);
+                }
+            }
+#endif
         }
     }
 
@@ -2854,7 +2871,7 @@ bool Renderer11::copyTexture(ID3D11ShaderResourceView *source, const gl::Rectang
     mDeviceContext->VSSetShader(mCopyVS, NULL, 0);
 
     ID3D11PixelShader *ps = NULL;
-    switch (destFormat)
+    switch(destFormat)
     {
       case GL_RGBA:            ps = mCopyRGBAPS;     break;
       case GL_RGB:             ps = mCopyRGBPS;      break;

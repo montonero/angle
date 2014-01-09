@@ -62,84 +62,19 @@ SwapChain11::~SwapChain11()
 
 void SwapChain11::release()
 {
-    if (mSwapChain)
-    {
-        mSwapChain->Release();
-        mSwapChain = NULL;
-    }
-
-    if (mBackBufferTexture)
-    {
-        mBackBufferTexture->Release();
-        mBackBufferTexture = NULL;
-    }
-
-    if (mBackBufferRTView)
-    {
-        mBackBufferRTView->Release();
-        mBackBufferRTView = NULL;
-    }  
-
-
-    if (mOffscreenTexture)
-    {
-        mOffscreenTexture->Release();
-        mOffscreenTexture = NULL;
-    }
-
-    if (mOffscreenRTView)
-    {
-        mOffscreenRTView->Release();
-        mOffscreenRTView = NULL;
-    }
-
-    if (mOffscreenSRView)
-    {
-        mOffscreenSRView->Release();
-        mOffscreenSRView = NULL;
-    }
-
-    if (mDepthStencilTexture)
-    {
-        mDepthStencilTexture->Release();
-        mDepthStencilTexture = NULL;
-    }
-
-    if (mDepthStencilDSView)
-    {
-        mDepthStencilDSView->Release();
-        mDepthStencilDSView = NULL;
-    }
-
-    if (mQuadVB)
-    {
-        mQuadVB->Release();
-        mQuadVB = NULL;
-    }
-
-    if (mPassThroughSampler)
-    {
-        mPassThroughSampler->Release();
-        mPassThroughSampler = NULL;
-    }
-
-    if (mPassThroughIL)
-    {
-        mPassThroughIL->Release();
-        mPassThroughIL = NULL;
-    }
-
-    if (mPassThroughVS)
-    {
-        mPassThroughVS->Release();
-        mPassThroughVS = NULL;
-    }
-
-    if (mPassThroughPS)
-    {
-        mPassThroughPS->Release();
-        mPassThroughPS = NULL;
-    }
+    SafeRelease(mSwapChain);
+    SafeRelease(mBackBufferTexture);
+    SafeRelease(mBackBufferRTView);
+    SafeRelease(mOffscreenTexture);
+    SafeRelease(mOffscreenRTView);
+    SafeRelease(mOffscreenSRView);
+    SafeRelease(mDepthStencilTexture);
+    SafeRelease(mDepthStencilDSView);
+    SafeRelease(mQuadVB);
+    SafeRelease(mPassThroughSampler);
+    SafeRelease(mPassThroughIL);
+    SafeRelease(mPassThroughVS);
+    SafeRelease(mPassThroughPS);
 
     if (!mAppCreatedShareHandle)
     {
@@ -149,35 +84,11 @@ void SwapChain11::release()
 
 void SwapChain11::releaseOffscreenTexture()
 {
-    if (mOffscreenTexture)
-    {
-        mOffscreenTexture->Release();
-        mOffscreenTexture = NULL;
-    }
-
-    if (mOffscreenRTView)
-    {
-        mOffscreenRTView->Release();
-        mOffscreenRTView = NULL;
-    }
-
-    if (mOffscreenSRView)
-    {
-        mOffscreenSRView->Release();
-        mOffscreenSRView = NULL;
-    }
-
-    if (mDepthStencilTexture)
-    {
-        mDepthStencilTexture->Release();
-        mDepthStencilTexture = NULL;
-    }
-
-    if (mDepthStencilDSView)
-    {
-        mDepthStencilDSView->Release();
-        mDepthStencilDSView = NULL;
-    }
+    SafeRelease(mOffscreenTexture);
+    SafeRelease(mOffscreenRTView);
+    SafeRelease(mOffscreenSRView);
+    SafeRelease(mDepthStencilTexture);
+    SafeRelease(mDepthStencilDSView);
 }
 
 EGLint SwapChain11::resetOffscreenTexture(int backbufferWidth, int backbufferHeight)
@@ -385,20 +296,17 @@ EGLint SwapChain11::resize(EGLint backbufferWidth, EGLint backbufferHeight)
         return EGL_BAD_ACCESS;
     }
 
-    // Can only call resize if we have already created our resources
-    ASSERT(mBackBufferTexture && mBackBufferRTView);
-
-    if (mBackBufferTexture)
+    // EGL allows creating a surface with 0x0 dimension, however, DXGI does not like 0x0 swapchains
+    if (backbufferWidth < 1 || backbufferHeight < 1)
     {
-        mBackBufferTexture->Release();
-        mBackBufferTexture = NULL;
+        return EGL_SUCCESS;
     }
 
-    if (mBackBufferRTView)
-    {
-        mBackBufferRTView->Release();
-        mBackBufferRTView = NULL;
-    }  
+    // Can only call resize if we have already created our swap buffer and resources
+    ASSERT(mSwapChain && mBackBufferTexture && mBackBufferRTView);
+
+    SafeRelease(mBackBufferTexture);
+    SafeRelease(mBackBufferRTView);
 
     if(mSwapChain)
     {
@@ -483,24 +391,9 @@ EGLint SwapChain11::reset(int backbufferWidth, int backbufferHeight, EGLint swap
 
     // Release specific resources to free up memory for the new render target, while the
     // old render target still exists for the purpose of preserving its contents.
-    if (mSwapChain)
-    {
-        mSwapChain->Release();
-        mSwapChain = NULL;
-    }
-
-    if (mBackBufferTexture)
-    {
-        mBackBufferTexture->Release();
-        mBackBufferTexture = NULL;
-    }
-
-    if (mBackBufferRTView)
-    {
-        mBackBufferRTView->Release();
-        mBackBufferRTView = NULL;  
-
-    }
+    SafeRelease(mSwapChain);
+    SafeRelease(mBackBufferTexture);
+    SafeRelease(mBackBufferRTView);
 
     mSwapInterval = static_cast<unsigned int>(swapInterval);
     if (mSwapInterval > 4)
@@ -535,6 +428,7 @@ EGLint SwapChain11::reset(int backbufferWidth, int backbufferHeight, EGLint swap
 
 #if !defined(ANGLE_PLATFORM_WINRT)
         IDXGIFactory *factory = mRenderer->getDxgiFactory();
+
         DXGI_SWAP_CHAIN_DESC swapChainDesc = {0};
         swapChainDesc.BufferCount = 2;
         swapChainDesc.BufferDesc.Format = gl_d3d11::ConvertRenderbufferFormat(mBackBufferFormat);
@@ -859,7 +753,11 @@ EGLint SwapChain11::swapRect(EGLint x, EGLint y, EGLint width, EGLint height)
 
     if(mSwapChain)
     {
-        result = mSwapChain->Present(mSwapInterval, 0);
+#if ANGLE_FORCE_VSYNC_OFF
+		result = mSwapChain->Present(0, 0);
+#else
+    	result = mSwapChain->Present(mSwapInterval, 0);
+#endif
     }
 
     if (result == DXGI_ERROR_DEVICE_REMOVED)

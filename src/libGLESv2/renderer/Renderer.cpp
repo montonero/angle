@@ -11,6 +11,9 @@
 #include "libGLESv2/main.h"
 #include "libGLESv2/Program.h"
 #include "libGLESv2/renderer/Renderer.h"
+#if !defined(ANGLE_PLATFORM_WINRT)
+#include "libGLESv2/renderer/Renderer9.h"
+#endif
 #include "libGLESv2/renderer/Renderer11.h"
 #include "libGLESv2/utilities.h"
 #include "third_party/trace_event/trace_event.h"
@@ -216,6 +219,7 @@ ShaderBlob *Renderer::compileToBinary(gl::InfoLog &infoLog, const char *hlsl, co
             }
         }
     }
+
     return NULL;
 }
 #endif // #if !defined(ANGLE_PLATFORM_WP8)

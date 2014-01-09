@@ -12,6 +12,8 @@
 #include <unknwn.h>
 #include <wrl.h>
 
+#define WINRT_EGL_IUNKNOWN(x) reinterpret_cast<IUnknown *>(x)
+
 typedef enum {
     ANGLE_D3D_FEATURE_LEVEL_ANY = 0,
     ANGLE_D3D_FEATURE_LEVEL_9_1,

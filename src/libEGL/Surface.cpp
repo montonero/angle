@@ -9,6 +9,7 @@
 // Implements EGLSurface and related functionality. [EGL 1.4] section 2.2 page 3.
 
 #include <tchar.h>
+
 #include <algorithm>
 
 #include "libEGL/Surface.h"
@@ -238,8 +239,6 @@ EGLNativeWindowType Surface::getWindowHandle()
 }
 
 
-
-
 #define kSurfaceProperty _TEXT("Egl::SurfaceOwner")
 #define kParentWndProc _TEXT("Egl::SurfaceParentWndProc")
 
@@ -337,6 +336,15 @@ bool Surface::checkForOutOfDateSwapChain()
 #endif // #if defined(ANGLE_PLATFORM_WINRT)
     bool sizeDirty = clientWidth != getWidth() || clientHeight != getHeight();
 
+    if (IsIconic(getWindowHandle()))
+    {
+        // The window is automatically resized to 150x22 when it's minimized, but the swapchain shouldn't be resized
+        // because that's not a useful size to render to.
+        sizeDirty = false;
+    }
+
+    bool wasDirty = (mSwapIntervalDirty || sizeDirty);
+
     if (mSwapIntervalDirty)
     {
         resetSwapChain(clientWidth, clientHeight);
@@ -346,7 +354,7 @@ bool Surface::checkForOutOfDateSwapChain()
         resizeSwapChain(clientWidth, clientHeight);
     }
 
-    if (mSwapIntervalDirty || sizeDirty)
+    if (wasDirty)
     {
         if (static_cast<egl::Surface*>(getCurrentDrawSurface()) == this)
         {

@@ -12,6 +12,7 @@
 #include "compiler/InfoSink.h"
 #include "compiler/SearchSymbol.h"
 #include "compiler/UnfoldShortCircuit.h"
+#include "compiler/NodeSearch.h"
 
 #include <algorithm>
 #include <cfloat>
@@ -83,6 +84,7 @@ OutputHLSL::OutputHLSL(TParseContext &context, const ShBuiltInResources& resourc
     mUsesAtan2_2 = false;
     mUsesAtan2_3 = false;
     mUsesAtan2_4 = false;
+    mUsesDiscardRewriting = false;
 
     mNumRenderTargets = resources.EXT_draw_buffers ? resources.MaxDrawBuffers : 1;
 
@@ -205,6 +207,11 @@ void OutputHLSL::header()
         const TString &name = attribute->second->getSymbol();
 
         attributes += "static " + typeString(type) + " " + decorate(name) + arrayString(type) + " = " + initializer(type) + ";\n";
+    }
+
+    if (mUsesDiscardRewriting)
+    {
+        out << "#define ANGLE_USES_DISCARD_REWRITING" << "\n";
     }
 
     if (shaderType == SH_FRAGMENT_SHADER)
@@ -1310,15 +1317,31 @@ bool OutputHLSL::visitBinary(Visit visit, TIntermBinary *node)
       case EOpMatrixTimesVector: outputTriplet(visit, "mul(transpose(", "), ", ")"); break;
       case EOpMatrixTimesMatrix: outputTriplet(visit, "transpose(mul(transpose(", "), transpose(", ")))"); break;
       case EOpLogicalOr:
-        out << "s" << mUnfoldShortCircuit->getNextTemporaryIndex();
-        return false;
+        if (node->getRight()->hasSideEffects())
+        {
+            out << "s" << mUnfoldShortCircuit->getNextTemporaryIndex();
+            return false;
+        }
+        else
+        {
+           outputTriplet(visit, "(", " || ", ")");
+           return true;
+        }
       case EOpLogicalXor:
         mUsesXor = true;
         outputTriplet(visit, "xor(", ", ", ")");
         break;
       case EOpLogicalAnd:
-        out << "s" << mUnfoldShortCircuit->getNextTemporaryIndex();
-        return false;
+        if (node->getRight()->hasSideEffects())
+        {
+            out << "s" << mUnfoldShortCircuit->getNextTemporaryIndex();
+            return false;
+        }
+        else
+        {
+           outputTriplet(visit, "(", " && ", ")");
+           return true;
+        }
       default: UNREACHABLE();
     }
 
@@ -1502,7 +1525,7 @@ bool OutputHLSL::visitAggregate(Visit visit, TIntermAggregate *node)
                         {
                             symbol->traverse(this);
                             out << arrayString(symbol->getType());
-                            out << " = " + initializer(variable->getType());
+                            out << " = " + initializer(symbol->getType());
                         }
                         else
                         {
@@ -1955,7 +1978,7 @@ bool OutputHLSL::visitSelection(Visit visit, TIntermSelection *node)
     {
         mUnfoldShortCircuit->traverse(node->getCondition());
 
-        out << "if(";
+        out << "if (";
 
         node->getCondition()->traverse(this);
 
@@ -1964,9 +1987,14 @@ bool OutputHLSL::visitSelection(Visit visit, TIntermSelection *node)
         outputLineDirective(node->getLine().first_line);
         out << "{\n";
 
+        bool discard = false;
+
         if (node->getTrueBlock())
         {
             traverseStatements(node->getTrueBlock());
+
+            // Detect true discard
+            discard = (discard || FindDiscard::search(node->getTrueBlock()));
         }
 
         outputLineDirective(node->getLine().first_line);
@@ -1984,6 +2012,15 @@ bool OutputHLSL::visitSelection(Visit visit, TIntermSelection *node)
 
             outputLineDirective(node->getFalseBlock()->getLine().first_line);
             out << ";\n}\n";
+
+            // Detect false discard
+            discard = (discard || FindDiscard::search(node->getFalseBlock()));
+        }
+
+        // ANGLE issue 486: Detect problematic conditional discard
+        if (discard && FindSideEffectRewriting::search(node))
+        {
+            mUsesDiscardRewriting = true;
         }
     }
 
@@ -2084,7 +2121,9 @@ bool OutputHLSL::visitBranch(Visit visit, TIntermBranch *node)
 
     switch (node->getFlowOp())
     {
-      case EOpKill:     outputTriplet(visit, "discard;\n", "", "");  break;
+      case EOpKill:
+        outputTriplet(visit, "discard;\n", "", "");
+        break;
       case EOpBreak:
         if (visit == PreVisit)
         {
@@ -2307,7 +2346,7 @@ bool OutputHLSL::handleExcessiveLoop(TIntermLoop *node)
 
                 if (!firstLoopFragment)
                 {
-                    out << "if(!Break";
+                    out << "if (!Break";
                     index->traverse(this);
                     out << ") {\n";
                 }

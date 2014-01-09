@@ -15,7 +15,7 @@
 #include <GLES2/gl2.h>
 
 #include "compiler/intermediate.h"
-#include "compiler/ParseHelper.h"
+#include "compiler/ParseContext.h"
 #include "compiler/Uniform.h"
 
 namespace sh
@@ -125,6 +125,7 @@ class OutputHLSL : public TIntermTraverser
     bool mUsesAtan2_2;
     bool mUsesAtan2_3;
     bool mUsesAtan2_4;
+    bool mUsesDiscardRewriting;
 
     int mNumRenderTargets;
 

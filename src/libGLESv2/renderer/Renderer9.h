@@ -170,7 +170,7 @@ class Renderer9 : public Renderer
 
     // Shader operations
     virtual ShaderExecutable *loadExecutable(const void *function, size_t length, rx::ShaderType type);
-    virtual ShaderExecutable *compileToExecutable(gl::InfoLog &infoLog, const char *shaderHLSL, rx::ShaderType type);
+    virtual ShaderExecutable *compileToExecutable(gl::InfoLog &infoLog, const char *shaderHLSL, rx::ShaderType type, D3DWorkaroundType workaround);
 
     // Image operations
     virtual Image *createImage();
@@ -198,12 +198,14 @@ class Renderer9 : public Renderer
   private:
     DISALLOW_COPY_AND_ASSIGN(Renderer9);
 
+    void deinitialize();
+
     void applyUniformnfv(gl::Uniform *targetUniform, const GLfloat *v);
     void applyUniformniv(gl::Uniform *targetUniform, const GLint *v);
     void applyUniformnbv(gl::Uniform *targetUniform, const GLint *v);
 
     void drawLineLoop(GLsizei count, GLenum type, const GLvoid *indices, int minIndex, gl::Buffer *elementArrayBuffer);
-    void drawIndexedPoints(GLsizei count, GLenum type, const GLvoid *indices, gl::Buffer *elementArrayBuffer);
+    void drawIndexedPoints(GLsizei count, GLenum type, const GLvoid *indices, int minIndex, gl::Buffer *elementArrayBuffer);
 
     void getMultiSampleSupport(D3DFORMAT format, bool *multiSampleArray);
     bool copyToRenderTarget(IDirect3DSurface9 *dest, IDirect3DSurface9 *source, bool fromManaged);
@@ -217,6 +219,10 @@ class Renderer9 : public Renderer
     void initializeDevice();
     D3DPRESENT_PARAMETERS getDefaultPresentParameters();
     void releaseDeviceResources();
+
+    HRESULT getDeviceStatusCode();
+    bool isRemovedDeviceResettable() const;
+    bool resetRemovedDevice();
 
     UINT mAdapter;
     D3DDEVTYPE mDeviceType;

@@ -1,8 +1,8 @@
-/* A Bison parser, made by GNU Bison 2.7.  */
+/* A Bison parser, made by GNU Bison 2.7.12-4996.  */
 
 /* Bison implementation for Yacc-like parsers in C
    
-      Copyright (C) 1984, 1989-1990, 2000-2012 Free Software Foundation, Inc.
+      Copyright (C) 1984, 1989-1990, 2000-2013 Free Software Foundation, Inc.
    
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -44,7 +44,7 @@
 #define YYBISON 1
 
 /* Bison version.  */
-#define YYBISON_VERSION "2.7"
+#define YYBISON_VERSION "2.7.12-4996"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -85,7 +85,7 @@
 #endif
 
 #include "compiler/SymbolTable.h"
-#include "compiler/ParseHelper.h"
+#include "compiler/ParseContext.h"
 #include "GLSLANG/ShaderLang.h"
 
 #define YYENABLE_NLS 0
@@ -401,12 +401,21 @@ typedef short int yytype_int16;
 # endif
 #endif
 
+#ifndef __attribute__
+/* This feature is available in gcc versions 2.5 and later.  */
+# if (! defined __GNUC__ || __GNUC__ < 2 \
+      || (__GNUC__ == 2 && __GNUC_MINOR__ < 5))
+#  define __attribute__(Spec) /* empty */
+# endif
+#endif
+
 /* Suppress unused-variable warnings by "using" E.  */
 #if ! defined lint || defined __GNUC__
 # define YYUSE(E) ((void) (E))
 #else
 # define YYUSE(E) /* empty */
 #endif
+
 
 /* Identity function, used to suppress warnings about constant conditions.  */
 #ifndef lint
@@ -714,27 +723,27 @@ static const yytype_int16 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint16 yyrline[] =
 {
-       0,   180,   180,   181,   184,   227,   230,   243,   248,   253,
-     259,   262,   265,   268,   363,   373,   386,   394,   494,   497,
-     505,   508,   514,   518,   525,   531,   540,   548,   603,   613,
-     616,   626,   636,   657,   658,   659,   664,   665,   673,   684,
-     685,   693,   704,   708,   709,   719,   729,   739,   752,   753,
-     763,   776,   780,   784,   788,   789,   802,   803,   816,   817,
-     830,   831,   848,   849,   862,   863,   864,   865,   866,   870,
-     873,   884,   892,   919,   924,   938,   993,   996,  1003,  1011,
-    1032,  1053,  1063,  1091,  1096,  1106,  1111,  1121,  1124,  1127,
-    1130,  1136,  1143,  1146,  1168,  1186,  1210,  1233,  1237,  1255,
-    1263,  1295,  1315,  1336,  1345,  1368,  1371,  1377,  1385,  1393,
-    1401,  1411,  1418,  1421,  1424,  1430,  1433,  1448,  1452,  1456,
-    1460,  1464,  1469,  1474,  1479,  1484,  1489,  1494,  1499,  1504,
-    1509,  1514,  1519,  1524,  1528,  1532,  1540,  1548,  1552,  1565,
-    1565,  1579,  1579,  1588,  1591,  1607,  1640,  1644,  1650,  1657,
-    1672,  1676,  1680,  1681,  1687,  1688,  1689,  1690,  1691,  1695,
-    1696,  1696,  1696,  1706,  1707,  1711,  1711,  1712,  1712,  1717,
-    1720,  1730,  1733,  1739,  1740,  1744,  1752,  1756,  1766,  1771,
-    1788,  1788,  1793,  1793,  1800,  1800,  1808,  1811,  1817,  1820,
-    1826,  1830,  1837,  1844,  1851,  1858,  1869,  1878,  1882,  1889,
-    1892,  1898,  1898
+       0,   180,   180,   181,   184,   239,   242,   247,   252,   257,
+     263,   266,   269,   272,   367,   377,   390,   398,   498,   501,
+     509,   512,   518,   522,   529,   535,   544,   552,   607,   617,
+     620,   630,   640,   661,   662,   663,   668,   669,   677,   688,
+     689,   697,   708,   712,   713,   723,   733,   743,   756,   757,
+     767,   780,   784,   788,   792,   793,   806,   807,   820,   821,
+     834,   835,   852,   853,   866,   867,   868,   869,   870,   874,
+     877,   888,   896,   923,   928,   942,   997,  1000,  1007,  1015,
+    1036,  1057,  1067,  1095,  1100,  1110,  1115,  1125,  1128,  1131,
+    1134,  1140,  1147,  1150,  1172,  1190,  1214,  1237,  1241,  1259,
+    1267,  1299,  1319,  1340,  1349,  1372,  1375,  1381,  1389,  1397,
+    1405,  1415,  1422,  1425,  1428,  1434,  1437,  1452,  1456,  1460,
+    1464,  1468,  1473,  1478,  1483,  1488,  1493,  1498,  1503,  1508,
+    1513,  1518,  1523,  1528,  1532,  1536,  1544,  1552,  1556,  1569,
+    1569,  1583,  1583,  1592,  1595,  1611,  1644,  1648,  1654,  1661,
+    1676,  1680,  1684,  1685,  1691,  1692,  1693,  1694,  1695,  1699,
+    1700,  1700,  1700,  1710,  1711,  1715,  1715,  1716,  1716,  1721,
+    1724,  1734,  1737,  1743,  1744,  1748,  1756,  1760,  1770,  1775,
+    1792,  1792,  1797,  1797,  1804,  1804,  1812,  1815,  1821,  1824,
+    1830,  1834,  1841,  1848,  1855,  1862,  1873,  1882,  1886,  1893,
+    1896,  1902,  1902
 };
 #endif
 
@@ -1512,11 +1521,7 @@ yy_symbol_value_print (yyoutput, yytype, yyvaluep, yylocationp, context)
 # else
   YYUSE (yyoutput);
 # endif
-  switch (yytype)
-    {
-      default:
-        break;
-    }
+  YYUSE (yytype);
 }
 
 
@@ -1916,12 +1921,7 @@ yydestruct (yymsg, yytype, yyvaluep, yylocationp, context)
     yymsg = "Deleting";
   YY_SYMBOL_PRINT (yymsg, yytype, yyvaluep, yylocationp);
 
-  switch (yytype)
-    {
-
-      default:
-        break;
-    }
+  YYUSE (yytype);
 }
 
 
@@ -2248,43 +2248,55 @@ yyreduce:
 
     {
         // The symbol table search was done in the lexical phase
-        const TSymbol* symbol = (yyvsp[(1) - (1)].lex).symbol;
-        const TVariable* variable;
-        if (symbol == 0) {
+        const TSymbol *symbol = (yyvsp[(1) - (1)].lex).symbol;
+        const TVariable *variable = 0;
+
+        if (!symbol)
+        {
             context->error((yylsp[(1) - (1)]), "undeclared identifier", (yyvsp[(1) - (1)].lex).string->c_str());
             context->recover();
-            TType type(EbtFloat, EbpUndefined);
-            TVariable* fakeVariable = new TVariable((yyvsp[(1) - (1)].lex).string, type);
-            context->symbolTable.insert(*fakeVariable);
-            variable = fakeVariable;
-        } else {
-            // This identifier can only be a variable type symbol
-            if (! symbol->isVariable()) {
-                context->error((yylsp[(1) - (1)]), "variable expected", (yyvsp[(1) - (1)].lex).string->c_str());
-                context->recover();
-            }
-            
+        }
+        else if (!symbol->isVariable())
+        {
+            context->error((yylsp[(1) - (1)]), "variable expected", (yyvsp[(1) - (1)].lex).string->c_str());
+            context->recover();
+        }
+        else
+        {
             variable = static_cast<const TVariable*>(symbol);
 
             if (context->symbolTable.findBuiltIn(variable->getName()) &&
                 !variable->getExtension().empty() &&
-                context->extensionErrorCheck((yylsp[(1) - (1)]), variable->getExtension())) {
+                context->extensionErrorCheck((yylsp[(1) - (1)]), variable->getExtension()))
+            {
                 context->recover();
             }
         }
 
-        // don't delete $1.string, it's used by error recovery, and the pool
-        // pop will reclaim the memory
+        if (!variable)
+        {
+            TType type(EbtFloat, EbpUndefined);
+            TVariable *fakeVariable = new TVariable((yyvsp[(1) - (1)].lex).string, type);
+            context->symbolTable.insert(*fakeVariable);
+            variable = fakeVariable;
+        }
 
-        if (variable->getType().getQualifier() == EvqConst ) {
+        if (variable->getType().getQualifier() == EvqConst)
+        {
             ConstantUnion* constArray = variable->getConstPointer();
             TType t(variable->getType());
             (yyval.interm.intermTypedNode) = context->intermediate.addConstantUnion(constArray, t, (yylsp[(1) - (1)]));
-        } else
+        }
+        else
+        {
             (yyval.interm.intermTypedNode) = context->intermediate.addSymbol(variable->getUniqueId(),
                                                  variable->getName(),
                                                  variable->getType(),
                                                  (yylsp[(1) - (1)]));
+        }
+
+        // don't delete $1.string, it's used by error recovery, and the pool
+        // pop will reclaim the memory
     }
     break;
 
