@@ -56,6 +56,7 @@ void DeallocateCurrent()
 
 }
 
+#if !defined(ANGLE_PLATFORM_WINRT)
 extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 {
     switch (reason)
@@ -107,6 +108,59 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved
 
     return TRUE;
 }
+#else
+extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
+{
+    switch (reason)
+    {
+    case DLL_PROCESS_ATTACH:
+    {
+#if !defined(ANGLE_DISABLE_TRACE)
+        FILE *debug = fopen(TRACE_OUTPUT_FILE, "rt");
+
+        if (debug)
+        {
+            fclose(debug);
+            debug = fopen(TRACE_OUTPUT_FILE, "wt");   // Erase
+
+            if (debug)
+            {
+                fclose(debug);
+            }
+        }
+#endif
+    }
+        break;
+    case DLL_THREAD_ATTACH:
+    {
+
+        currentTLS = TlsAlloc();
+
+        if (currentTLS == TLS_OUT_OF_INDEXES)
+        {
+            return FALSE;
+        }
+        egl::AllocateCurrent();
+    }
+        break;
+    case DLL_THREAD_DETACH:
+    {
+        egl::DeallocateCurrent();
+    }
+        break;
+    case DLL_PROCESS_DETACH:
+    {
+        egl::DeallocateCurrent();
+        TlsFree(currentTLS);
+    }
+        break;
+    default:
+        break;
+    }
+
+    return TRUE;
+}
+#endif
 
 namespace egl
 {

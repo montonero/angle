@@ -53,6 +53,7 @@ void DeallocateCurrent()
 
 }
 
+#if !defined(ANGLE_PLATFORM_WINRT)
 extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 {
     switch (reason)
@@ -89,6 +90,43 @@ extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved
 
     return TRUE;
 }
+#else
+extern "C" BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
+{
+    switch (reason)
+    {
+    case DLL_PROCESS_ATTACH:
+        break;
+
+    case DLL_THREAD_ATTACH:
+    {
+        currentTLS = TlsAlloc();
+
+        if (currentTLS == TLS_OUT_OF_INDEXES)
+        {
+            return FALSE;
+        }                             
+        gl::AllocateCurrent();
+    }
+        break;
+    case DLL_THREAD_DETACH:
+    {
+        gl::DeallocateCurrent();
+    }
+        break;
+    case DLL_PROCESS_DETACH:
+    {
+        gl::DeallocateCurrent();
+        TlsFree(currentTLS);
+    }
+        break;
+    default:
+        break;
+    }
+
+    return TRUE;
+}
+#endif
 
 namespace gl
 {
