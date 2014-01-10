@@ -336,12 +336,15 @@ bool Surface::checkForOutOfDateSwapChain()
 #endif // #if defined(ANGLE_PLATFORM_WINRT)
     bool sizeDirty = clientWidth != getWidth() || clientHeight != getHeight();
 
+#if !defined(ANGLE_PLATFORM_WINRT)
+
     if (IsIconic(getWindowHandle()))
     {
         // The window is automatically resized to 150x22 when it's minimized, but the swapchain shouldn't be resized
         // because that's not a useful size to render to.
         sizeDirty = false;
     }
+#endif
 
     bool wasDirty = (mSwapIntervalDirty || sizeDirty);
 
