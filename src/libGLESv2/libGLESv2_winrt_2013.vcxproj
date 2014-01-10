@@ -468,11 +468,8 @@
     <ProjectReference Include="..\compiler\preprocessor\preprocessor_winrt_2013.vcxproj">
       <Project>{e7b1d854-ad49-4662-8326-24579123f471}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\compiler\translator_common_winrt_2013.vcxproj">
-      <Project>{3681e22c-f004-4048-a867-8dedd85ec601}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\compiler\translator_hlsl_winrt_2013.vcxproj">
-      <Project>{f7cc3484-9bcf-4063-b842-02c0c621fc1b}</Project>
+    <ProjectReference Include="..\compiler\translator_winrt_vs2013.vcxproj">
+      <Project>{c330a2a1-c2ee-4ad1-b642-46a489db89e5}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
