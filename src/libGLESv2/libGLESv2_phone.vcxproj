@@ -281,12 +281,6 @@
     <ProjectReference Include="..\compiler\preprocessor\preprocessor_phone.vcxproj">
       <Project>{8b1820bf-48e1-4308-b529-3e58e7fafc6f}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\compiler\translator_common_phone.vcxproj">
-      <Project>{4206a313-d487-461d-9462-bcd7127a7ecc}</Project>
-    </ProjectReference>
-    <ProjectReference Include="..\compiler\translator_hlsl_phone.vcxproj">
-      <Project>{500b47df-7711-4ff3-b63e-14508a00f979}</Project>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsPhone\v$(TargetPlatformVersion)\Microsoft.Cpp.WindowsPhone.$(TargetPlatformVersion).targets" />
